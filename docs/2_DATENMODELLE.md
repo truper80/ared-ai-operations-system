@@ -1,55 +1,58 @@
 # 2. DATENMODELLE FÜR A.RED OPERATIONS-SYSTEM
 
-**Ziel:** Definieren aller Kern-Entitäten für die Lead- und Aufgaben-Zentrale, zugeschnitten auf A.RED-spezifische Geschätslogik.
+**Ziel:** Definieren aller Kern-Entitäten für die Lead- und Aufgaben-Zentrale, zugeschnitten auf A.RED-spezifische Geschäftslogik.
 
 **Kernprinzip:** FileMaker bleibt Master-System. Diese Modelle beschreiben die MVP-1-Struktur und zeigen gleichzeitig die spätere Zielarchitektur.
 
 **Wichtigste Regel:**
 > **Kunde ≠ Standort ≠ Ansprechpartner ≠ Auftrag ≠ Gerät ≠ Rechnungsempfänger**
 
-Diese Trennung ist für A.RED essentiell und muss im Datenmodell sauber sichtbar sein.
+Diese Trennung ist für A.RED essenziell und muss im Datenmodell sauber sichtbar sein.
 
 ---
 
 ## 1. MODELLGRENZEN (MVP 1 vs. SPÄTER)
 
-### MVP 1 – Vollständig modelliert
+### MVP 1 – vollständig modelliert
+
 - **LEAD** – Eingehende Anfrage, zentrale Erfassung
 - **TASK** – Abgeleitete Aufgabe aus beliebiger Quelle
 - **CUSTOMER** – Unternehmenskundenmaster
-- **SITE** – ⭐ NEU: Standort / Objekt des Kunden
+- **SITE** – Standort / Objekt des Kunden
 - **CONTACT** – Ansprechpartner
-- **SERVICE** – Dienstleistungs-Katalog (A.RED-Leistungen)
-- **TIME_SLOT** – Zeitfenster-Vorschläge (kein automatisches Booking)
-- **ASSIGNMENT** – Task → Mitarbeiter-Zuordnung
+- **SERVICE** – Dienstleistungs-Katalog für A.RED-Leistungen
+- **TIME_SLOT** – Zeitfenster-Vorschläge, kein automatisches Booking
+- **ASSIGNMENT** – Task-zu-Mitarbeiter-Zuordnung
 
-### Später – Als Platzhalter mit grundlegender Struktur
-- **OFFER** – Angebot (mit Freigabe-Logik)
+### Später – als Platzhalter mit grundlegender Struktur
+
+- **OFFER** – Angebot mit Freigabe-Logik
 - **ORDER** – Kundenauftrag
-- **PURCHASE_ORDER** – Bestellungen an Lieferanten
-- **DELIVERY** – Wareneingang/Versand
-- **INVOICE** – Rechnung/Billing
+- **PURCHASE_ORDER** – Bestellung an Lieferanten
+- **DELIVERY** – Wareneingang / Warenübernahme
+- **INVOICE** – Rechnung
 - **EQUIPMENT** / **FIRE_EXTINGUISHER** – Geräteverwaltung
 - **EMPLOYEE** – Mitarbeiterdaten
-- **CASHFLOW_ENTRY** – Finanzbewegungen (Booked, Open)
+- **CASHFLOW_ENTRY** – Finanzbewegungen, offene und gebuchte Positionen
 - **VEHICLE_STOCK** – Fahrzeuglager
 
-**Nicht Phase 1:**
-- ❌ Vollständiger KI-Telefonassistent
-- ❌ Automatische Terminverschiebung
-- ❌ Finanzdashboard (vollständig)
-- ❌ Kundenlogin-Portal
-- ❌ Fahrzeuglager-Automatisierung
-- ❌ RZL-Automatisierung
-- ❌ Automatische Bank-/Zahlungsaktionen
-- ❌ Automatische Angebote für komplexe Planleistungen
-- ❌ GPS/Geolocation-Überwachung
+### Nicht Phase 1
+
+- Vollständiger KI-Telefonassistent
+- Automatische Terminverschiebung
+- Vollständiges Finanzdashboard
+- Kundenlogin-Portal
+- Fahrzeuglager-Automatisierung
+- RZL-Automatisierung
+- Automatische Bank- oder Zahlungsaktionen
+- Automatische Angebote für komplexe Planleistungen
+- GPS-/Geolocation-Überwachung
 
 ---
 
-## 2. KERN-ENTITÄTEN (ENTITY RELATIONSHIP DIAGRAM)
+## 2. KERN-ENTITÄTEN
 
-```
+```text
 ┌─────────────┐         ┌────────┐         ┌──────────────┐
 │    LEAD     │────────▶│  TASK  │────────▶│  CUSTOMER    │
 └─────────────┘         └────────┘         └──────────────┘
@@ -84,9 +87,10 @@ INDEPENDENT MASTER DATA:
 ## 3. DETAILLIERTE ENTITY DEFINITIONS
 
 ### 3.1 LEAD
+
 **Zweck:** Zentrale Erfassung aller eingehenden Anfragen, unabhängig vom Kanal.
 
-**Wichtig:** Ein Lead ist eine **rohe, unklassifizierte Anfrage**. Nicht alle Leads werden zu Tasks. Ein Lead kann mehrfach verarbeitet werden.
+**Wichtig:** Ein Lead ist eine rohe, noch nicht vollständig qualifizierte Anfrage. Nicht alle Leads werden zu Tasks. Ein Lead kann mehrfach verarbeitet werden.
 
 ```json
 {
@@ -96,7 +100,7 @@ INDEPENDENT MASTER DATA:
     "lead_id": {
       "type": "UUID",
       "required": true,
-      "description": "Eindeutige Lead-ID (auto-generated)"
+      "description": "Eindeutige Lead-ID, automatisch erzeugt"
     },
     "source_channel": {
       "type": "ENUM",
@@ -107,7 +111,7 @@ INDEPENDENT MASTER DATA:
     "source_reference": {
       "type": "string",
       "required": false,
-      "description": "Email-Message-ID, Telefon-Protokoll-ID, Form-Submission-ID, etc."
+      "description": "E-Mail-Message-ID, Telefon-Protokoll-ID, Formular-ID oder sonstige Referenz"
     },
     "received_date": {
       "type": "ISO8601_DateTime",
@@ -124,7 +128,7 @@ INDEPENDENT MASTER DATA:
       "type": "string",
       "required": false,
       "pattern": "^[+\\d\\-() ]{7,25}$",
-      "description": "Telefonnummer (internationale Format)"
+      "description": "Telefonnummer im internationalen Format"
     },
     "contact_email": {
       "type": "email",
@@ -134,23 +138,23 @@ INDEPENDENT MASTER DATA:
     "company_name": {
       "type": "string",
       "required": false,
-      "description": "Firmenname (falls vorhanden)"
+      "description": "Firmenname, falls vorhanden"
     },
     "location_description": {
       "type": "string",
       "required": false,
-      "description": "Ungefähre Ortsangabe aus Anfrage"
+      "description": "Ungefähre Ortsangabe aus der Anfrage"
     },
     "initial_description": {
       "type": "text",
       "required": true,
-      "description": "Freitextbeschreibung der Anfrage (wie eingegeben)"
+      "description": "Freitextbeschreibung der Anfrage"
     },
     "urgency_indicator": {
       "type": "ENUM",
       "enum": ["normal", "soon", "urgent", "emergency"],
       "required": false,
-      "description": "Zeitliche Dringlichkeit (aus Anfrage erkannt)"
+      "description": "Zeitliche Dringlichkeit aus der Anfrage"
     },
     "lead_status": {
       "type": "ENUM",
@@ -161,17 +165,17 @@ INDEPENDENT MASTER DATA:
     "is_existing_customer": {
       "type": "boolean",
       "required": false,
-      "description": "Ist bereits Kunde in FileMaker?"
+      "description": "Ist der Anfragende bereits Kunde in FileMaker?"
     },
     "linked_customer_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu CUSTOMER (falls bekannt oder Bestandskunde)"
+      "description": "FK zu CUSTOMER, falls bekannt"
     },
     "linked_site_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu SITE (falls Standort bekannt)"
+      "description": "FK zu SITE, falls Standort bekannt"
     },
     "classification_timestamp": {
       "type": "ISO8601_DateTime",
@@ -180,14 +184,14 @@ INDEPENDENT MASTER DATA:
     "classified_service_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu SERVICE (nach Klassifikation)"
+      "description": "FK zu SERVICE nach Klassifikation"
     },
     "classification_confidence": {
       "type": "float",
       "min": 0,
       "max": 1,
       "required": false,
-      "description": "KI-Confidence für Klassifikation (0.0–1.0)"
+      "description": "KI-Confidence für Klassifikation"
     },
     "notes": {
       "type": "text",
@@ -197,7 +201,7 @@ INDEPENDENT MASTER DATA:
     "created_by": {
       "type": "string",
       "required": true,
-      "description": "Benutzer, der Lead erfasst hat"
+      "description": "Benutzer oder System, das den Lead erfasst hat"
     },
     "created_at": {
       "type": "ISO8601_DateTime",
@@ -209,10 +213,10 @@ INDEPENDENT MASTER DATA:
     }
   },
   "businessRules": [
-    "classification_confidence < 0.7 → Lead bleibt auf 'new', KI-Vorschlag nur als Notification",
-    "Manuelle Genehmigung erforderlich, bevor lead_status → 'classified'",
+    "classification_confidence < 0.7 → Lead bleibt auf 'new', KI-Vorschlag nur als Hinweis",
+    "Manuelle Genehmigung erforderlich, bevor lead_status auf 'classified' gesetzt wird",
     "Ein Lead kann mehrfach zu verschiedenen Tasks führen",
-    "Ein Lead kann verworfen werden ohne Task"
+    "Ein Lead kann verworfen werden, ohne dass ein Task entsteht"
   ]
 }
 ```
@@ -220,9 +224,10 @@ INDEPENDENT MASTER DATA:
 ---
 
 ### 3.2 CUSTOMER
-**Zweck:** Kundenmaster – enthält rechtliche/kommerzielle Kundendaten. **NICHT die Adresse(n)!**
 
-**Wichtig:** Ein Kunde kann mehrere Standorte (SITE) haben. Adressen gehören zu SITE, nicht zu CUSTOMER.
+**Zweck:** Kundenmaster mit rechtlichen und kommerziellen Kundendaten.
+
+**Wichtig:** CUSTOMER enthält nicht die Standortadressen. Ein Kunde kann mehrere Standorte haben. Adressen gehören zu SITE, nicht zu CUSTOMER.
 
 ```json
 {
@@ -243,7 +248,7 @@ INDEPENDENT MASTER DATA:
       "enum": ["prospect", "active", "inactive", "deactivated", "blocked", "requires_review"],
       "required": true,
       "default": "prospect",
-"description": "Kundenstatus ohne bevorzugte Kundenlogik"
+      "description": "Kundenstatus ohne bevorzugte Kundenlogik"
     },
     "name": {
       "type": "string",
@@ -254,7 +259,7 @@ INDEPENDENT MASTER DATA:
     "contact_person": {
       "type": "string",
       "required": false,
-      "description": "Ansprechpartner (bei company_type=company)"
+      "description": "Hauptansprechpartner, falls bekannt"
     },
     "primary_email": {
       "type": "email",
@@ -276,17 +281,17 @@ INDEPENDENT MASTER DATA:
     "tax_id": {
       "type": "string",
       "required": false,
-      "description": "UID (Österreich) oder Steuernummer"
+      "description": "UID oder Steuernummer"
     },
     "industry_sector": {
       "type": "string",
       "required": false,
-      "description": "Branche (z.B. 'Immobilienverwaltung', 'Logistik', 'Einzelhandel')"
+      "description": "Branche, z.B. Immobilienverwaltung, Logistik, Einzelhandel"
     },
     "customer_lifetime_value": {
       "type": "float",
       "required": false,
-      "description": "Gesamtumsatz EUR (aus FileMaker)"
+      "description": "Gesamtumsatz EUR aus FileMaker"
     },
     "contract_start_date": {
       "type": "date",
@@ -304,7 +309,7 @@ INDEPENDENT MASTER DATA:
     "external_id_filemaker": {
       "type": "string",
       "required": false,
-      "description": "Kundennummer aus FileMaker (Sync-Key)"
+      "description": "Kundennummer aus FileMaker, Sync-Key"
     },
     "notes": {
       "type": "text",
@@ -320,19 +325,20 @@ INDEPENDENT MASTER DATA:
     }
   },
   "businessRules": [
-    "Bestandskunde (status='active') bedeutet: bessere Zuordnung, FileMaker-Daten prüfen, aber NICHT automatisch höhere Priorität",
-    "Status 'requires_review' = Lead braucht manuellen Check bevor Task entsteht",
-    "Status 'blocked' = keine neuen Tasks für diesen Kunden anlegen"
+    "Bestandskunde bedeutet bessere Zuordnung und FileMaker-Kontext, aber nicht automatisch höhere Priorität",
+    "Status 'requires_review' bedeutet: Lead braucht manuellen Check, bevor ein Task entsteht",
+    "Status 'blocked' bedeutet: keine neuen Tasks für diesen Kunden anlegen"
   ]
 }
 ```
 
 ---
 
-### 3.3 SITE (⭐ NEU)
-**Zweck:** Standort / Objekt eines Kunden. Ein Kunde kann mehrere Sites haben.
+### 3.3 SITE
 
-**KRITISCH:** Alle Adressen, Zugangsnotizen, Prüfintervalle, Sonderpreise gehören hier hin, NICHT zu CUSTOMER.
+**Zweck:** Standort oder Objekt eines Kunden. Ein Kunde kann mehrere Sites haben.
+
+**Wichtig:** Adressen, Zugangsnotizen, Prüfintervalle, Standort-Sonderpreise und standortbezogene Rahmenvereinbarungen gehören hier hin, nicht zu CUSTOMER.
 
 ```json
 {
@@ -346,7 +352,7 @@ INDEPENDENT MASTER DATA:
     "customer_id": {
       "type": "UUID",
       "required": true,
-      "description": "FK zu CUSTOMER (Muss ein Kundengehören)"
+      "description": "FK zu CUSTOMER, muss einem Kunden gehören"
     },
     "site_number_filemaker": {
       "type": "string",
@@ -356,13 +362,13 @@ INDEPENDENT MASTER DATA:
     "external_id_filemaker": {
       "type": "string",
       "required": false,
-      "description": "Standort-ID aus FileMaker (Sync-Key)"
+      "description": "Standort-ID aus FileMaker, Sync-Key"
     },
     "name": {
       "type": "string",
       "required": true,
       "maxLength": 255,
-      "description": "Name des Standorts (z.B. 'München Zentrale', 'Lager Wien')"
+      "description": "Name des Standorts, z.B. 'Wien Zentrale' oder 'Lager Wien'"
     },
     "street_address": {
       "type": "string",
@@ -373,7 +379,7 @@ INDEPENDENT MASTER DATA:
       "type": "string",
       "required": true,
       "pattern": "^\\d{4}$",
-      "description": "Österreich: 4-stellig"
+      "description": "Österreichische Postleitzahl, 4-stellig"
     },
     "city": {
       "type": "string",
@@ -384,17 +390,17 @@ INDEPENDENT MASTER DATA:
       "type": "string",
       "required": true,
       "default": "AT",
-      "description": "ISO 3166-1 alpha-2 (default: AT)"
+      "description": "ISO 3166-1 alpha-2, Standard AT"
     },
     "access_notes": {
       "type": "text",
       "required": false,
-      "description": "Zugangshinweise, Pförtner, Türöffner, etc."
+      "description": "Zugangshinweise, Pförtner, Türöffner, Schlüssel, Ansprechpartner vor Ort"
     },
     "inspection_interval_months": {
       "type": "integer",
       "required": false,
-      "description": "Standard-Inspektionsintervall (z.B. 12)"
+      "description": "Standard-Inspektionsintervall in Monaten"
     },
     "last_inspection_date": {
       "type": "date",
@@ -403,7 +409,7 @@ INDEPENDENT MASTER DATA:
     "next_inspection_due": {
       "type": "date",
       "required": false,
-      "description": "Berechnet: last_inspection_date + interval_months"
+      "description": "Berechnet aus letzter Prüfung und Intervall"
     },
     "special_prices_apply": {
       "type": "boolean",
@@ -413,7 +419,7 @@ INDEPENDENT MASTER DATA:
     "framework_agreement_id": {
       "type": "string",
       "required": false,
-      "description": "Referenz zu Rahmenvereinbarung (external)"
+      "description": "Referenz zu einer Rahmenvereinbarung"
     },
     "framework_agreement_number": {
       "type": "string",
@@ -439,10 +445,11 @@ INDEPENDENT MASTER DATA:
     }
   },
   "businessRules": [
-    "Standort ist nicht gleich Ansprechpartner (Contact ist separate Entität)",
-    "Special prices und Rahmenvereinbarungen ermöglichen später Freigabe-Klassen A/B/C",
-    "Inspektionsintervall bestimmt, wann nächste Inspektion fällig wird",
-    "Ein Kunden kann 1-n Sites haben (z.B. Hausverwaltung mit 20 Objekten)"
+    "Standort ist nicht gleich Ansprechpartner",
+    "Ein Kunde kann 1-n Sites haben",
+    "Ein Standort gehört zu genau einem Kunden",
+    "Sonderpreise und Rahmenvereinbarungen können später Freigabe-Klassen beeinflussen",
+    "Das Inspektionsintervall bestimmt, wann die nächste Inspektion fällig wird"
   ]
 }
 ```
@@ -450,7 +457,8 @@ INDEPENDENT MASTER DATA:
 ---
 
 ### 3.4 CONTACT
-**Zweck:** Ansprechpartner bei einem Kunden. Ein Kunde kann mehrere Ansprechpartner haben.
+
+**Zweck:** Ansprechpartner bei einem Kunden oder optional bei einem konkreten Standort.
 
 ```json
 {
@@ -469,7 +477,7 @@ INDEPENDENT MASTER DATA:
     "site_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu SITE (optional, falls Contact an Standort gebunden)"
+      "description": "FK zu SITE, falls der Kontakt standortgebunden ist"
     },
     "contact_type": {
       "type": "ENUM",
@@ -484,7 +492,7 @@ INDEPENDENT MASTER DATA:
     "title": {
       "type": "string",
       "required": false,
-      "description": "Position (z.B. 'Geschäftsführer', 'Objektmanager')"
+      "description": "Position, z.B. Geschäftsführer oder Objektmanager"
     },
     "email": {
       "type": "email",
@@ -529,9 +537,10 @@ INDEPENDENT MASTER DATA:
 ---
 
 ### 3.5 SERVICE
-**Zweck:** Katalog der A.RED-Dienstleistungen (statische Master-Daten).
 
-**Wichtig:** Services werden nach Automatisierungs-Klasse unterschieden (siehe Punkt 6).
+**Zweck:** Katalog der A.RED-Dienstleistungen.
+
+**Wichtig:** Services werden nach Automatisierungs- und Angebotsklasse unterschieden.
 
 ```json
 {
@@ -576,7 +585,7 @@ INDEPENDENT MASTER DATA:
       "type": "ENUM",
       "enum": ["A_automatic", "B_approval", "C_manual_only"],
       "required": true,
-      "description": "Freigabe-Klasse für Angebote (siehe Punkt 6)"
+      "description": "Freigabe-Klasse für Angebote"
     },
     "automation_level": {
       "type": "ENUM",
@@ -614,7 +623,7 @@ INDEPENDENT MASTER DATA:
       "type": "array",
       "items": { "type": "string" },
       "required": false,
-      "description": "Für KI-Klassifikation",
+      "description": "Begriffe für KI-Klassifikation",
       "example": ["feuerlöscher", "prüfung", "inspektion", "wartung", "tüv"]
     },
     "is_active": {
@@ -632,10 +641,10 @@ INDEPENDENT MASTER DATA:
     }
   },
   "businessRules": [
-    "Klasse A: automatisch möglich (z.B. Feuerlöscher-Prüfung nach bekanntem Plan)",
-    "Klasse B: Freigabe nötig (z.B. Sonderpreise, Neukunde, unklares Material)",
-    "Klasse C: niemals automatisch (z.B. Brandschutzpläne, Planleistungen)",
-    "Sorglos-Paket, Feuerlöscher-Prüfung und -Verkauf müssen getrennt sein"
+    "Klasse A: automatisch möglich, z.B. Feuerlöscher-Prüfung nach bekannten Regeln",
+    "Klasse B: Freigabe nötig, z.B. Sonderpreise, Neukunde, unklares Material",
+    "Klasse C: niemals automatisch senden, z.B. Brandschutzpläne oder komplexe Planleistungen",
+    "Sorglos-Paket, Feuerlöscher-Prüfung, Feuerlöscher-Verkauf und Feuerlöscher-Miete müssen getrennt bleiben"
   ]
 }
 ```
@@ -643,9 +652,10 @@ INDEPENDENT MASTER DATA:
 ---
 
 ### 3.6 TASK
-**Zweck:** Konkrete Aufgabe (kann aus Lead oder anderen Quellen entstehen).
 
-**KRITISCH:** Tasks sind nicht zwingend an LEAD gebunden. Sie entstehen aus verschiedenen Quellen.
+**Zweck:** Konkrete Aufgabe aus Lead oder anderer Quelle.
+
+**Wichtig:** Tasks sind nicht zwingend an Leads gebunden. Sie können aus E-Mail, Telefon, Website, Angebot, Bestellung, Lieferung, Rechnung, internem Prozess, Lieferant, Kunde oder Steuerberater-Thema entstehen.
 
 ```json
 {
@@ -675,17 +685,17 @@ INDEPENDENT MASTER DATA:
         "other"
       ],
       "required": true,
-      "description": "Woher kommt diese Aufgabe?"
+      "description": "Quelle der Aufgabe"
     },
     "source_reference": {
       "type": "string",
       "required": false,
-      "description": "ID der Quelle (Lead-ID, Email-ID, Order-ID, etc.)"
+      "description": "ID der Quelle, z.B. Lead-ID, E-Mail-ID oder Auftrags-ID"
     },
     "source_lead_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu LEAD (optional, falls aus Lead entstanden)"
+      "description": "FK zu LEAD, optional falls aus Lead entstanden"
     },
     "task_type": {
       "type": "ENUM",
@@ -695,7 +705,7 @@ INDEPENDENT MASTER DATA:
     "service_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu SERVICE (optional, falls Service bekannt)"
+      "description": "FK zu SERVICE, falls Service bekannt"
     },
     "customer_id": {
       "type": "UUID",
@@ -705,7 +715,7 @@ INDEPENDENT MASTER DATA:
     "site_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu SITE (falls Standort bekannt)"
+      "description": "FK zu SITE, falls Standort bekannt"
     },
     "title": {
       "type": "string",
@@ -720,14 +730,14 @@ INDEPENDENT MASTER DATA:
       "type": "ENUM",
       "enum": ["A_automatic", "B_backoffice", "C_management"],
       "required": true,
-      "description": "Aufgabenklasse für Routing"
+      "description": "Aufgabenklasse für Routing und Freigabe"
     },
     "priority": {
       "type": "ENUM",
       "enum": ["low", "medium", "high", "critical"],
       "required": true,
       "default": "medium",
-      "description": "Wird aus Urgenz, Frist, wirtschaftlicher Relevanz, Risiko berechnet"
+      "description": "Berechnet aus Dringlichkeit, Frist, wirtschaftlicher Relevanz und Risiko"
     },
     "status": {
       "type": "ENUM",
@@ -751,7 +761,7 @@ INDEPENDENT MASTER DATA:
     "assigned_to_employee_id": {
       "type": "string",
       "required": false,
-      "description": "Mitarbeiter-ID (später FK zu EMPLOYEE)"
+      "description": "Mitarbeiter-ID, später FK zu EMPLOYEE"
     },
     "assigned_at": {
       "type": "ISO8601_DateTime",
@@ -768,13 +778,13 @@ INDEPENDENT MASTER DATA:
     "scheduled_time_slot_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu TIME_SLOT (falls geplant)"
+      "description": "FK zu TIME_SLOT, falls geplant"
     },
     "is_blocking_existing_appointment": {
       "type": "boolean",
       "required": false,
       "default": false,
-      "description": "WICHTIG: Verschiebt das einen bestehenden Kundentermin?"
+      "description": "Kennzeichnet, ob bestehende Kundentermine betroffen wären"
     },
     "notes": {
       "type": "text",
@@ -798,11 +808,11 @@ INDEPENDENT MASTER DATA:
     }
   },
   "businessRules": [
-    "Klasse A: automatisch/fast automatisch (Standardantwort, fehlende Daten anfordern, einfache Angebotsvorbereitung, Nachfass-Email, Erinnerung, Klassifizierung)",
-    "Klasse B: Büro/Backoffice (unklare Anfrage, Sonderpreis, Bestellung, Rechnung prüfen, Materialfrage, Termin mit Risiko, Rahmenvereinbarung prüfen)",
-    "Klasse C: Geschäftsleitung (große Freigaben, Preis-/Rabattentscheidung, problematischer Kunde, Liquiditätsrelevanz, große Bestellung, rechtliches, unwirtschaftlicher Lead, Sonderfall)",
-    "Priorität ergibt sich aus: Dringlichkeit, Frist, wirtschaftlicher Relevanz, Risiko, Aufgabenart, Eskalationsbedarf, Zahlungs-/Sonderfall",
-    "Bestandskunde ist nicht gleich höhere Priorität",
+    "Klasse A: automatisch oder fast automatisch, z.B. Standardantwort, fehlende Daten anfordern, einfache Angebotsvorbereitung, Nachfass-E-Mail, Erinnerung, Klassifizierung",
+    "Klasse B: Büro oder Backoffice, z.B. unklare Anfrage, Sonderpreis, Bestellung, Rechnung prüfen, Materialfrage, Termin mit Risiko, Rahmenvereinbarung prüfen",
+    "Klasse C: Geschäftsleitung, z.B. große Freigaben, Preisentscheidung, Rabattentscheidung, problematischer Kunde, Liquiditätsrelevanz, große Bestellung, rechtliches Thema, unwirtschaftlicher Lead, Sonderfall",
+    "Priorität ergibt sich aus Dringlichkeit, Frist, wirtschaftlicher Relevanz, Risiko, Aufgabenart, Eskalationsbedarf und Zahlungs- oder Sonderfall",
+    "Bestandskunde bedeutet nicht automatisch höhere Priorität",
     "Tasks können aus verschiedenen Quellen entstehen, nicht nur aus Leads"
   ]
 }
@@ -811,9 +821,10 @@ INDEPENDENT MASTER DATA:
 ---
 
 ### 3.7 TIME_SLOT
-**Zweck:** Verfügbare/gebuchte Zeitfenster. Modell für Terminvorschläge, nicht für automatische Disposition.
 
-**WICHTIG:** Das System macht anfangs nur Terminvorschläge. Bestehende Kundentermine dürfen nicht automatisch verschoben werden. Bestätigung durch Frontoffice ist erforderlich.
+**Zweck:** Verfügbare oder gebuchte Zeitfenster. Modell für Terminvorschläge, nicht für automatische Disposition.
+
+**Wichtig:** Das System macht anfangs nur Terminvorschläge. Bestehende Kundentermine dürfen nicht automatisch verschoben werden. Bestätigung durch Frontoffice ist erforderlich.
 
 ```json
 {
@@ -828,7 +839,7 @@ INDEPENDENT MASTER DATA:
       "type": "ENUM",
       "enum": ["available", "booked", "blocked"],
       "required": true,
-      "description": "Verfügbar / Gebucht / Blockiert (z.B. Urlaub)"
+      "description": "Verfügbar, gebucht oder blockiert"
     },
     "start_datetime": {
       "type": "ISO8601_DateTime",
@@ -850,7 +861,7 @@ INDEPENDENT MASTER DATA:
     "assigned_task_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu TASK (falls booked)"
+      "description": "FK zu TASK, falls gebucht"
     },
     "customer_id": {
       "type": "UUID",
@@ -860,29 +871,29 @@ INDEPENDENT MASTER DATA:
     "site_id": {
       "type": "UUID",
       "required": false,
-      "description": "FK zu SITE (Standort des Termins)"
+      "description": "FK zu SITE, Standort des Termins"
     },
     "location": {
       "type": "string",
       "required": false,
-      "description": "Ort (aus SITE.address oder manuell)"
+      "description": "Ort aus SITE-Adresse oder manuell"
     },
     "is_changeable": {
       "type": "boolean",
       "required": true,
       "default": false,
-      "description": "Kann Termin noch verschoben/storniert werden?"
+      "description": "Kennzeichnet, ob ein Termin noch verschoben oder storniert werden darf"
     },
     "is_proposal_only": {
       "type": "boolean",
       "required": true,
-      "default": false,
-      "description": "KI-Vorschlag oder bereits Kundenbestätigung?"
+      "default": true,
+      "description": "Kennzeichnet einen KI-Vorschlag ohne Kundenbestätigung"
     },
     "proposed_by_ai": {
       "type": "boolean",
       "required": false,
-      "description": "Von KI vorgeschlagen?"
+      "description": "Von KI vorgeschlagen"
     },
     "confirmed_by_customer": {
       "type": "boolean",
@@ -899,12 +910,12 @@ INDEPENDENT MASTER DATA:
     "external_id_google_calendar": {
       "type": "string",
       "required": false,
-      "description": "Google Calendar Event ID (bidirektionaler Sync)"
+      "description": "Google Calendar Event ID, schreibender Sync erst nach Frontoffice-Bestätigung"
     },
     "material_risk_identified": {
       "type": "boolean",
       "required": false,
-      "description": "Materialrisiko oder Puffer unklar?"
+      "description": "Materialrisiko oder Puffer unklar"
     },
     "created_at": {
       "type": "ISO8601_DateTime",
@@ -916,13 +927,13 @@ INDEPENDENT MASTER DATA:
     }
   },
   "businessRules": [
-    "Google Kalender bleibt vorerst führende Quelle",
-    "System macht nur Terminvorschläge (is_proposal_only=true)",
-    "Bestehende Kundentermine: is_changeable=false → keine automatische Verschiebung",
+    "Google Calendar bleibt vorerst führende Kalenderquelle",
+    "System macht nur Terminvorschläge",
+    "Bestehende Kundentermine dürfen nicht automatisch verschoben werden",
     "Keine verbindliche Buchung ohne Frontoffice-Bestätigung",
-    "Bei Neukunden: Materialbedarf oft unklar (material_risk_identified=true)",
+    "Bei Neukunden ist der Materialbedarf oft unklar",
     "Puffer und Anfahrtszeit müssen berücksichtigt werden",
-    "Frontoffice entscheidet und bestätigt Termin"
+    "Frontoffice entscheidet und bestätigt den Termin"
   ]
 }
 ```
@@ -930,6 +941,7 @@ INDEPENDENT MASTER DATA:
 ---
 
 ### 3.8 ASSIGNMENT
+
 **Zweck:** Zuordnung von Aufgaben zu Mitarbeitern.
 
 ```json
@@ -981,21 +993,21 @@ INDEPENDENT MASTER DATA:
 ## 4. SPÄTER – PLATZHALTER FÜR ZIELARCHITEKTUR
 
 ### 4.1 OFFER (Phase 2)
-**Minimal Structure für späteren Ausbau:**
+
 ```json
 {
   "entity": "OFFER",
   "primaryKey": "offer_id",
   "attributes": {
     "offer_id": "UUID",
-    "task_id": "UUID (FK zu TASK)",
+    "task_id": "UUID, FK zu TASK",
     "customer_id": "UUID",
     "site_id": "UUID",
     "service_ids": "array of UUID",
-    "offer_class": "ENUM (A_automatic / B_approval / C_manual_only)",
-    "status": "ENUM (draft / pending_approval / approved / sent / accepted / rejected)",
+    "offer_class": "ENUM: A_automatic / B_approval / C_manual_only",
+    "status": "ENUM: draft / pending_approval / approved / sent / accepted / rejected",
     "total_amount_eur": "float",
-    "approval_chain": "array (wer muss freigeben?)",
+    "approval_chain": "array",
     "approval_status": "pending / approved / rejected",
     "external_id_filemaker": "string",
     "created_at": "ISO8601_DateTime",
@@ -1005,6 +1017,7 @@ INDEPENDENT MASTER DATA:
 ```
 
 ### 4.2 ORDER (Phase 2)
+
 ```json
 {
   "entity": "ORDER",
@@ -1013,10 +1026,10 @@ INDEPENDENT MASTER DATA:
     "order_id": "UUID",
     "customer_id": "UUID",
     "site_id": "UUID",
-    "offer_id": "UUID (FK)",
+    "offer_id": "UUID, FK zu OFFER",
     "service_ids": "array of UUID",
     "order_number": "string",
-    "status": "ENUM (created / scheduled / in_progress / completed / invoiced / cancelled)",
+    "status": "ENUM: created / scheduled / in_progress / completed / invoiced / cancelled",
     "total_amount_eur": "float",
     "scheduled_date": "date",
     "assigned_employee_id": "string",
@@ -1026,6 +1039,7 @@ INDEPENDENT MASTER DATA:
 ```
 
 ### 4.3 PURCHASE_ORDER (Phase 2)
+
 ```json
 {
   "entity": "PURCHASE_ORDER",
@@ -1034,14 +1048,21 @@ INDEPENDENT MASTER DATA:
     "po_id": "UUID",
     "supplier_id": "UUID",
     "order_date": "date",
-    "items": "array (supplier items)",
+    "items": "array of ordered items",
     "total_cost_eur": "float",
-    "status": "ENUM (draft / sent / confirmed / partial / received / invoiced)"
+    "expected_gross_cash_out_eur": "float",
+    "assigned_customer_id": "UUID",
+    "assigned_site_id": "UUID",
+    "assigned_order_id": "UUID",
+    "assigned_employee_id": "string",
+    "approval_status": "pending / approved / rejected",
+    "status": "ENUM: draft / sent / confirmed / waiting_for_complete_delivery / received / invoiced"
   }
 }
 ```
 
 ### 4.4 DELIVERY (Phase 2)
+
 ```json
 {
   "entity": "DELIVERY",
@@ -1049,36 +1070,45 @@ INDEPENDENT MASTER DATA:
   "attributes": {
     "delivery_id": "UUID",
     "purchase_order_id": "UUID",
-    "order_id": "UUID",
     "delivery_date": "date",
     "items_received": "array",
     "received_by": "string",
-    "status": "ENUM (pending / partial / completed / damaged)"
+    "is_complete": "boolean",
+    "is_damaged": "boolean",
+    "photo_documentation": "array of file references",
+    "status": "ENUM: pending / incomplete / completed / damaged"
   }
 }
 ```
 
 ### 4.5 INVOICE (Phase 2)
+
 ```json
 {
   "entity": "INVOICE",
   "primaryKey": "invoice_id",
   "attributes": {
     "invoice_id": "UUID",
-    "order_id": "UUID (FK)",
+    "invoice_type": "ENUM: incoming / outgoing",
+    "order_id": "UUID",
+    "purchase_order_id": "UUID",
     "customer_id": "UUID",
+    "supplier_id": "UUID",
     "invoice_number": "string",
     "invoice_date": "date",
     "due_date": "date",
-    "total_amount_eur": "float",
-    "status": "ENUM (draft / sent / opened / overdue / paid / written_off)",
+    "net_amount_eur": "float",
+    "gross_amount_eur": "float",
+    "status": "ENUM: draft / received / checked / approved / exported / paid / overdue",
     "external_id_filemaker": "string",
+    "external_id_rzl": "string",
     "created_at": "ISO8601_DateTime"
   }
 }
 ```
 
 ### 4.6 EQUIPMENT & FIRE_EXTINGUISHER (Phase 3)
+
 ```json
 {
   "entity": "EQUIPMENT",
@@ -1086,17 +1116,19 @@ INDEPENDENT MASTER DATA:
   "attributes": {
     "equipment_id": "UUID",
     "site_id": "UUID",
-    "equipment_type": "ENUM (fire_extinguisher / first_aid_kit / wall_hydrant / etc.)",
+    "equipment_type": "ENUM: fire_extinguisher / first_aid_kit / wall_hydrant / other",
+    "barcode": "string",
     "serial_number": "string",
     "location_notes": "string",
     "last_inspection_date": "date",
     "next_inspection_due": "date",
-    "status": "ENUM (active / expired / maintenance / disposed)"
+    "status": "ENUM: active / expired / maintenance / disposed"
   }
 }
 ```
 
 ### 4.7 EMPLOYEE (Phase 2)
+
 ```json
 {
   "entity": "EMPLOYEE",
@@ -1106,40 +1138,52 @@ INDEPENDENT MASTER DATA:
     "name": "string",
     "email": "email",
     "phone": "string",
-    "role": "ENUM (sales / technician / manager / admin)",
+    "role": "ENUM: frontoffice / backoffice / technician / warehouse / management / admin",
     "is_active": "boolean",
-    "skills": "array (z.B. ['Feuerlöscher-Prüfung', 'Ersthelfer'])"
+    "home_start_location": "address",
+    "skills": "array",
+    "monthly_order_budget_eur": "float",
+    "monthly_revenue_target_eur": "float"
   }
 }
 ```
 
 ### 4.8 CASHFLOW_ENTRY (Phase 2)
+
 ```json
 {
   "entity": "CASHFLOW_ENTRY",
   "primaryKey": "entry_id",
   "attributes": {
     "entry_id": "UUID",
-    "invoice_id": "UUID",
-    "entry_type": "ENUM (booked / open / overdue)",
-    "amount_eur": "float",
+    "source_type": "ENUM: outgoing_invoice / incoming_invoice / purchase_order / bank_transaction / manual",
+    "source_reference": "string",
+    "entry_type": "ENUM: expected_in / expected_out / actual_in / actual_out",
+    "net_amount_eur": "float",
+    "gross_amount_eur": "float",
     "due_date": "date",
-    "received_date": "date"
+    "actual_date": "date",
+    "bank_account_id": "string",
+    "status": "ENUM: planned / open / booked / overdue / cancelled"
   }
 }
 ```
 
 ### 4.9 VEHICLE_STOCK (Phase 3)
+
 ```json
 {
   "entity": "VEHICLE_STOCK",
-  "primaryKey": "vehicle_id",
+  "primaryKey": "vehicle_stock_id",
   "attributes": {
+    "vehicle_stock_id": "UUID",
     "vehicle_id": "UUID",
     "license_plate": "string",
-    "capacity": "object (Feuerlöscher-Kapazität, Platz für Ausrüstung, etc.)",
     "assigned_employee_id": "string",
-    "status": "ENUM (available / in_use / maintenance / decommissioned)"
+    "item_id": "string",
+    "quantity": "integer",
+    "last_inventory_check": "date",
+    "status": "ENUM: active / review_required / inactive"
   }
 }
 ```
@@ -1148,7 +1192,10 @@ INDEPENDENT MASTER DATA:
 
 ## 5. INTEGRATIONS-PUNKTE
 
-### FileMaker Sync (Master)
+### FileMaker Sync
+
+FileMaker bleibt das führende System für bestehende Stamm- und Bewegungsdaten.
+
 - `CUSTOMER.external_id_filemaker` ← Kundennummer
 - `SITE.external_id_filemaker` ← Standort-ID
 - `SERVICE.external_id_filemaker` ← Service-Nummer
@@ -1157,33 +1204,46 @@ INDEPENDENT MASTER DATA:
 - `INVOICE.external_id_filemaker` ← Rechnungsnummer
 
 ### Google Workspace
-- **Google Calendar ↔ TIME_SLOT** (bidirektional)
-  - Neue gebuchte TIME_SLOT erzeugen Google Calendar Event
-  - Google Calendar Änderungen aktualisieren TIME_SLOT
-- **Gmail ↔ LEAD** (unidirektional, vorerst)
-  - Email-Eingang erstellt Lead mit source_reference
 
-### Datenflusss
-```
-Eingang (Lead)
+- **Google Calendar → TIME_SLOT** zunächst lesend für Verfügbarkeits- und Terminvorschläge
+  - Schreibender Sync erst nach Frontoffice-Bestätigung
+  - Keine automatische Verschiebung bestehender Termine
+- **Gmail → LEAD** zunächst lesend und klassifizierend
+  - E-Mail-Eingang erstellt bei konkretem Bedarf einen Lead mit `source_reference`
+  - Bestehende Labels und Postfächer werden schrittweise angebunden
+
+### 3CX / Telefon
+
+- Telefonanlage: 3CX
+- Ziel: Transkription, KI-Mitlesen und Antwortvorschläge
+- Anfangs keine KI, die selbstständig telefoniert
+- Speicherung primär als Transkript für weitere Verarbeitung
+- Rechtliche Prüfung vor produktiver Gesprächsaufzeichnung erforderlich
+
+### Datenfluss
+
+```text
+Eingang
     ↓
-Klassifikation (SERVICE)
+Lead-Erfassung
     ↓
-Task-Erstellung (TASK)
+Klassifikation nach SERVICE
     ↓
-Routing (task_class A/B/C)
+Task-Erstellung
     ↓
-Mitarbeiter-Zuweisung (ASSIGNMENT)
+Routing nach task_class A/B/C
     ↓
-Terminvorschlag (TIME_SLOT, is_proposal_only)
+Mitarbeiter-Zuweisung
+    ↓
+Terminvorschlag als TIME_SLOT
     ↓
 Frontoffice-Bestätigung
     ↓
-Google Calendar Sync (external_id_google_calendar)
+Google-Calendar-Sync nach Bestätigung
     ↓
 Ausführung / Follow-up
     ↓
-→ später: OFFER / ORDER / INVOICE
+Später: OFFER / ORDER / INVOICE / CASHFLOW
 ```
 
 ---
@@ -1191,63 +1251,72 @@ Ausführung / Follow-up
 ## 6. DATENTYPEN & VALIDIERUNG
 
 | Typ | Format | Beispiel | Validierung |
-|-----|--------|---------|------------|
-| **UUID** | RFC 4122 | `550e8400-e29b-41d4-a716-446655440000` | 36 chars, hex+hyphens |
-| **ISO8601_DateTime** | ISO 8601 | `2026-05-14T19:30:00Z` | UTC timezone |
+|-----|--------|----------|-------------|
+| **UUID** | RFC 4122 | `550e8400-e29b-41d4-a716-446655440000` | 36 Zeichen, Hex + Bindestriche |
+| **ISO8601_DateTime** | ISO 8601 | `2026-05-14T19:30:00Z` | UTC-Zeitstempel |
 | **date** | ISO 8601 | `2026-05-14` | YYYY-MM-DD |
-| **email** | RFC 5322 | `name@example.com` | Standard-Validierung |
+| **email** | RFC 5322 | `name@example.at` | Standard-E-Mail-Validierung |
 | **url** | RFC 3986 | `https://example.at` | Mit Protokoll |
-| **postal_code_AT** | Österreich | `1010` | 4-stellig, ^\d{4}$ |
-| **ENUM** | Predefined | siehe Entity | Nur vordefinierte Werte |
+| **postal_code_AT** | Österreich | `1010` | 4-stellig, `^\\d{4}$` |
+| **ENUM** | vordefiniert | siehe Entity | Nur definierte Werte |
 
 ---
 
 ## 7. KRITISCHE GESCHÄFTSREGELN
 
 ### 7.1 Kunde ≠ Standort
-- **CUSTOMER** enthält: Firmenname, UID, Kontaktdaten, Status, Branche
-- **SITE** enthält: Adresse, Zugang, Inspektionsintervall, Rahmenvertrag
-- Ein Kunde kann 1-n Sites haben
-- Ein Standort gehört zu genau einem Kunden
+
+- **CUSTOMER** enthält Firmenname, UID, Kontaktdaten, Status und Branche.
+- **SITE** enthält Adresse, Zugang, Inspektionsintervall und Standortregeln.
+- Ein Kunde kann mehrere Sites haben.
+- Ein Standort gehört zu genau einem Kunden.
 
 ### 7.2 Standort ≠ Ansprechpartner
-- **SITE** = physischer Ort
-- **CONTACT** = Person bei CUSTOMER (optional gebunden an SITE)
-- Ein Kontakt kann mehrere Sites verwalten
-- Ein Standort kann mehrere Ansprechpartner haben
+
+- **SITE** ist der physische Ort.
+- **CONTACT** ist eine Person, Abteilung oder Rolle.
+- Ein Kontakt kann optional an eine SITE gebunden sein.
+- Ein Standort kann mehrere Ansprechpartner haben.
 
 ### 7.3 Lead ≠ Task
-- **LEAD** = rohe, unklassifizierte Anfrage
-- **TASK** = konkrete, priorisierte Aufgabe
-- Ein Lead kann zu 0 oder mehreren Tasks führen
-- Eine Task kann unabhängig vom Lead entstehen
+
+- **LEAD** ist die rohe Anfrage.
+- **TASK** ist die konkrete, priorisierte Aufgabe.
+- Ein Lead kann zu keiner, einer oder mehreren Aufgaben führen.
+- Eine Aufgabe kann unabhängig von einem Lead entstehen.
 
 ### 7.4 Bestandskunde ≠ höhere Priorität
-- Bestandskunde bedeutet: bessere Datenqualität, FileMaker-Kontext vorhanden
-- **Aber nicht automatisch höhere Priorität**
-- Priorität ergibt sich aus: Dringlichkeit, Frist, wirtschaftlicher Relevanz, Risiko
 
-### 7.5 Komplexe Services = immer manuell
-- Services mit `offer_class="C_manual_only"` werden NIEMALS automatisch verarbeitet
-- Beispiele: Brandschutzpläne, Planleistungen, haftungsrelevante Leistungen
-- KI darf maximal klassifizieren und benachrichtigen
+- Bestandskunde bedeutet bessere Datenqualität und FileMaker-Kontext.
+- Bestandskunde bedeutet nicht automatisch höhere Priorität.
+- Priorität ergibt sich aus Dringlichkeit, Frist, wirtschaftlicher Relevanz und Risiko.
+
+### 7.5 Komplexe Services bleiben manuell
+
+- Services mit `offer_class = "C_manual_only"` werden nicht automatisch angeboten oder versendet.
+- Beispiele: Brandschutzpläne, Fluchtwegpläne, komplexe Planleistungen, haftungsrelevante Sonderfälle.
+- KI darf maximal klassifizieren, vorbereiten und benachrichtigen.
 
 ### 7.6 Terminmodell = Vorschlag, nicht Disposition
-- `is_proposal_only=true` = KI-Vorschlag, nicht Kundenbestätigung
-- Bestehende Kundentermine: `is_changeable=false` (keine automatische Verschiebung)
-- Nur mit Frontoffice-Bestätigung → `confirmed_by_customer=true`
-- Google Calendar ist Master-Quelle (vorerst)
 
-### 7.7 Angebot-Klassen (später Automatisierung)
-- **Klasse A (automatisch):** Standardprodukte, bekannte Bestandskunden, klare Stückzahlen
-- **Klasse B (Freigabe nötig):** Sonderpreise, Neukunde, unklare Daten, Rahmenvereinbarung, Zahlungsproblem
-- **Klasse C (niemals automatisch):** Planleistungen, haftungsrelevant, komplex
+- `is_proposal_only = true` bedeutet KI-Vorschlag, nicht Kundenbestätigung.
+- Bestehende Kundentermine dürfen nicht automatisch verschoben werden.
+- Verbindliche Buchung erst nach Frontoffice-Bestätigung.
+- Google Calendar ist vorerst führende Kalenderquelle.
+- Schreibender Google-Calendar-Sync erfolgt erst nach Frontoffice-Bestätigung.
+
+### 7.7 Angebotsklassen
+
+- **Klasse A – automatisch möglich:** Standardprodukte, klare Stückzahlen, bekannte Regeln, Sorglos-Paket, Feuerlöscher nach Kalkulator.
+- **Klasse B – Freigabe nötig:** Sonderpreise, Neukunde, unklare Daten, Rahmenvereinbarung, Zahlungsproblem, Materialrisiko.
+- **Klasse C – niemals automatisch senden:** Planleistungen, haftungsrelevante Leistungen, Sonderprojekte, komplexe Erstberatungen.
 
 ---
 
-## 8. BEISPIEL-DATENSÄTZE (ÖSTERREICH)
+## 8. BEISPIEL-DATENSÄTZE
 
 ### Beispiel 1: Neuer Lead aus Telefon
+
 ```json
 {
   "lead_id": "550e8400-e29b-41d4-a716-446655440001",
@@ -1262,12 +1331,13 @@ Ausführung / Follow-up
   "lead_status": "new",
   "is_existing_customer": true,
   "linked_customer_id": "550e8400-e29b-41d4-a716-446655440100",
-  "created_by": "anna.mueller",
+  "created_by": "frontoffice",
   "created_at": "2026-05-14T10:35:00Z"
 }
 ```
 
 ### Beispiel 2: SITE mit Inspektionsintervall
+
 ```json
 {
   "site_id": "550e8400-e29b-41d4-a716-446655440201",
@@ -1287,18 +1357,19 @@ Ausführung / Follow-up
 }
 ```
 
-### Beispiel 3: Task aus Lead (Klasse B)
+### Beispiel 3: Task aus Lead
+
 ```json
 {
-  "task_id": "a716-446655440003-550e8400-e29b-41d4",
+  "task_id": "550e8400-e29b-41d4-a716-446655440003",
   "source_type": "lead",
   "source_reference": "550e8400-e29b-41d4-a716-446655440001",
   "source_lead_id": "550e8400-e29b-41d4-a716-446655440001",
   "task_type": "scheduling",
-  "service_id": "e29b-41d4-550e-8400-a716446655440002",
+  "service_id": "550e8400-e29b-41d4-a716-446655440002",
   "customer_id": "550e8400-e29b-41d4-a716-446655440100",
   "title": "Feuerlöscher-Inspektionen – 5 Objekte Pokorny",
-  "description": "Inspektionen für 5 verwaltete Objekte fällig (Rahmenvertrag RA-HV-2024-001)",
+  "description": "Inspektionen für 5 verwaltete Objekte fällig. Rahmenvereinbarung prüfen.",
   "task_class": "B_backoffice",
   "priority": "medium",
   "status": "created",
@@ -1311,56 +1382,59 @@ Ausführung / Follow-up
 
 ## 9. MVP-1-ZUSAMMENFASSUNG
 
-### Vollständig modelliert & umgesetzt
-✅ LEAD  
-✅ TASK  
-✅ CUSTOMER  
-✅ SITE (⭐ NEU)  
-✅ CONTACT  
-✅ SERVICE  
-✅ TIME_SLOT (Vorschlagsmodell)  
-✅ ASSIGNMENT  
+### Vollständig modelliert
+
+- LEAD
+- TASK
+- CUSTOMER
+- SITE
+- CONTACT
+- SERVICE
+- TIME_SLOT
+- ASSIGNMENT
 
 ### Funktionalität MVP 1
-- Zentrale Lead-Erfassung (4 Kanäle)
-- Lead-Klassifikation (KI mit Confidence-Check)
-- Task-Routing nach Klasse (A/B/C)
-- Task-Zuweisung an Mitarbeiter
-- Terminvorschläge (Google Calendar lesbar)
-- Bestandskunden-Datenabgleich (FileMaker)
-- Standort-Management (Inspektionsintervalle, Sonderpreise)
+
+- Zentrale Lead-Erfassung über Telefon, E-Mail, Website und manuelle Eingabe
+- Lead-Klassifikation mit KI und Confidence-Check
+- Task-Routing nach Klasse A/B/C
+- Task-Zuweisung an Mitarbeiter oder Rolle
+- Terminvorschläge auf Basis von Kalenderdaten
+- Bestandskunden-Datenabgleich mit FileMaker
+- Standort-Management mit Inspektionsintervallen, Sonderpreisen und Rahmenvereinbarungen
 
 ### Nicht MVP 1
+
 - Automatische Angebote
 - Automatische Bestellungen
 - Rechnungsautomatisierung
-- Geräte-/Ausrüstungs-Management
+- Geräte- und Ausrüstungsmanagement
 - Fahrzeuglager
 - Finanzdashboard
-- Telefonassistent (produktiv)
-- GPS/Geolocation
+- Produktiver Telefonassistent
+- GPS-/Geolocation-Überwachung
 
 ---
 
 ## 10. OFFENE FRAGEN ZUR KLÄRUNG
 
-1. **Rahmenvereinbarungen:** Sollten als separate Entität modelliert werden oder reicht `SITE.framework_agreement_id`?
+1. **Rahmenvereinbarungen:** Separate Entität oder vorerst Referenzfeld an CUSTOMER/SITE ausreichend?
 
-2. **Sonderpreise:** Sind diese Site-spezifisch oder auch kunden-spezifisch? (aktuell: Site-spezifisch)
+2. **Sonderpreise:** Standortbezogen, kundenbezogen oder beides?
 
-3. **Inspektionsintervalle:** Sind diese universal pro Service-Typ (z.B. alle Feuerlöscher 12 Monate) oder Site-spezifisch variabel?
+3. **Inspektionsintervalle:** Universal pro Service-Typ oder pro Standort variabel?
 
-4. **Google Calendar:** Bleibt das dauerhaft die Master-Quelle oder wird das später durch eigenes Scheduling ersetzt?
+4. **Google Calendar:** Dauerhaft führende Kalenderquelle oder später Ablöse durch eigenes Scheduling-Modul?
 
-5. **Email-Integration:** Sollen Emails automatisch als LEAD erfasst werden oder nur manuell?
+5. **E-Mail-Integration:** Welche Postfächer und Labels werden zuerst produktiv angebunden?
 
-6. **Telefon-Klassifikation:** Gibt es ein Telefonsystem, das Anrufe aufzeichnet/transkribiert?
+6. **Telefon-Klassifikation:** Technische Umsetzung für 3CX-Aufzeichnung, Transkription, Speicherung und rechtliche Freigabe klären.
 
-7. **Geschäftsleitung-Approval:** Wer sind die C-Approver für `task_class="C_management"`?
+7. **Geschäftsleitung-Approval:** Wer sind die konkreten C-Approver für `task_class = "C_management"`?
 
-8. **Material-Risiko:** Wie wird `TIME_SLOT.material_risk_identified` von der KI erkannt?
+8. **Material-Risiko:** Welche Regeln erkennt die KI für `TIME_SLOT.material_risk_identified`?
 
-9. **Bestätigung Kundentermin:** Über welchen Kanal erfolgt die Terminbestätigung? (Email, SMS, Call, Portal?)
+9. **Terminbestätigung:** Über welchen Kanal erfolgt die Bestätigung: E-Mail, Telefon, SMS oder Portal?
 
 10. **Task-Benachrichtigung:** Wer wird über neu erstellte Tasks welcher Klasse benachrichtigt?
 
@@ -1368,18 +1442,46 @@ Ausführung / Follow-up
 
 ## 11. NEXT STEPS
 
-1. ✅ **Datenmodelle überarbeitet** (diese Datei)
-2. 📋 **→ JSON-Schemas** für API-Validierung (`/schemas/`)
-3. 📋 **→ Geschäftsregeln** (doc/3_GESCHAEFTREGELN.md)
-4. 📋 **→ Integration-Plan** (doc/4_INTEGRATIONS-PLAN.md)
-5. 📋 **→ Entscheidungs-Log** (decisions/ADR-001, ADR-002, ...)
+1. Datenmodelle als Grundlage verwenden
+2. JSON-Schemas für API-Validierung erstellen: `/schemas/`
+3. Geschäftsregeln dokumentieren: `docs/3_GESCHAEFTSREGELN.md`
+4. Integrationsplan dokumentieren: `docs/4_INTEGRATIONSPLAN.md`
+5. Entscheidungs-Log anlegen: `decisions/ADR-001.md`, `decisions/ADR-002.md`, ...
 
 ---
 
-**Version:** 2.0  
-**Status:** ÜBERARBEITET (auf Basis detaillierter A.RED-Anforderungen)  
+## 12. QUALITÄTSCHECK
+
+Nach Änderungen an dieser Datei muss geprüft werden, dass folgende Begriffe nicht vorkommen:
+
+```text
+vip
+VIP
+München
+Geschätslogik
+Kundengehören
+Datenflusss
+bidirektional
+internationale Format
+```
+
+Folgende Begriffe sollen vorkommen:
+
+```text
+Geschäftslogik
+Wien Zentrale
+muss einem Kunden gehören
+Datenfluss
+schreibender Sync erst nach Frontoffice-Bestätigung
+Keine automatische Verschiebung bestehender Termine
+```
+
+---
+
+**Version:** 2.1  
+**Status:** ÜBERARBEITET UND BEREINIGT  
 **Letzte Änderung:** 2026-05-14  
-**Österreichische Standards:** ✅ AT-defaults, 4-stellige PLZ  
-**A.RED-spezifisch:** ✅ Services, Site-Modell, keine bevorzugte Kundenlogik
-**FileMaker Master:** ✅ Sync-Keys vorgesehen  
-**MVP-1-Grenzen:** ✅ Klar dokumentiert  
+**Österreichische Standards:** AT-defaults, 4-stellige PLZ  
+**A.RED-spezifisch:** Services, Site-Modell, keine bevorzugte Kundenlogik  
+**FileMaker Master:** Sync-Keys vorgesehen  
+**MVP-1-Grenzen:** Klar dokumentiert
