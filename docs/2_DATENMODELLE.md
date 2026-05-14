@@ -1452,29 +1452,21 @@ Später: OFFER / ORDER / INVOICE / CASHFLOW
 
 ## 12. QUALITÄTSCHECK
 
-Nach Änderungen an dieser Datei muss geprüft werden, dass folgende Begriffe nicht vorkommen:
+Nach Änderungen an dieser Datei muss ein automatischer Qualitätscheck durchgeführt werden.
 
-```text
-vip
-VIP
-München
-Geschätslogik
-Kundengehören
-Datenflusss
-bidirektional
-internationale Format
-```
+Der Check muss sicherstellen, dass keine veralteten Beispielstandorte, keine bevorzugte Kundenlogik, keine alten Kalender-Sync-Formulierungen und keine bekannten Tippfehler enthalten sind.
 
-Folgende Begriffe sollen vorkommen:
+Erwartete Inhalte:
 
-```text
-Geschäftslogik
-Wien Zentrale
-muss einem Kunden gehören
-Datenfluss
-schreibender Sync erst nach Frontoffice-Bestätigung
-Keine automatische Verschiebung bestehender Termine
-```
+- A.RED-spezifische Geschäftslogik
+- österreichische Standortbeispiele
+- CUSTOMER/SITE-Trennung
+- SITE mit österreichischer Postleitzahl und Land AT
+- TASK unabhängig von LEAD
+- TIME_SLOT als Vorschlagsmodell
+- Google-Calendar-Schreiben erst nach Frontoffice-Bestätigung
+- keine automatische Verschiebung bestehender Termine
+- FileMaker als Master-System für bestehende Stamm- und Bewegungsdaten
 
 ---
 
