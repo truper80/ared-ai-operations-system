@@ -243,7 +243,7 @@ INDEPENDENT MASTER DATA:
       "enum": ["prospect", "active", "inactive", "deactivated", "blocked", "requires_review"],
       "required": true,
       "default": "prospect",
-      "description": "Kundenstatus (NICHT: vip)"
+"description": "Kundenstatus ohne bevorzugte Kundenlogik"
     },
     "name": {
       "type": "string",
@@ -1380,6 +1380,6 @@ Ausführung / Follow-up
 **Status:** ÜBERARBEITET (auf Basis detaillierter A.RED-Anforderungen)  
 **Letzte Änderung:** 2026-05-14  
 **Österreichische Standards:** ✅ AT-defaults, 4-stellige PLZ  
-**A.RED-spezifisch:** ✅ Services, Site-Modell, keine VIP-Logik  
+**A.RED-spezifisch:** ✅ Services, Site-Modell, keine bevorzugte Kundenlogik
 **FileMaker Master:** ✅ Sync-Keys vorgesehen  
 **MVP-1-Grenzen:** ✅ Klar dokumentiert  
